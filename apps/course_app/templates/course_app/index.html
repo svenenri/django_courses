@@ -7,9 +7,14 @@
 	</head>
 	<body>
 		<h1 class="title">Courses</h1>
+		{% if messages %}
+			{% for message in messages %}
+				<h2>{{message}}</h2>
+			{% endfor %}
+		{% endif %}
 		<div class="courseAdd">
 			<h3><br>Add a new course</br></h3>
-			<form class="add" action="/process" method="post">
+			<form class="add" action="{% url 'courses:courses_process' %}" method="post">
 				{% csrf_token %}
 				<label for="name">
 					Name:

@@ -1,43 +1,34 @@
 from django.shortcuts import render, redirect, HttpResponse
-
+from django.contrib import messages
+from django.core.urlresolvers import reverse
 from .models import Course
 
-# Create your views here.
+# Views for Courses project.
 def index(request):
 
 	# use qSelect to display items in db
 	try:
-		courseSelect = Course.objects.all()
+		courseSelect = Course.courseManager.getAllCourses()
+		courses = {
+			'allCourses': courseSelect,
+		}
+		return render(request, 'course_app/index.html', courses)
 	except:
 		return render(request, 'course_app/index.html')
 
-	courses = {
-		'allCourses': courseSelect,
-	}
-
-	return render(request, 'course_app/index.html', courses)
-
 def process(request):
-	"""
-
-	Need to resolve description One-to-One relationship issue. Not able to traverse from Course to Description info using related_name
-
-	"""
 	if request.method == 'POST':
 		if request.POST['add']:
 			course = request.POST['name']
 			description = request.POST['description']
-			# use qAdd
-			qAddCourse = Course.objects.create(course_name = course, description = description)
-			# qAddDescription = Description.objects.create(info = description)
-			return redirect('/')
+			addCourse = Course.courseManager.addCourse(course, description)
+			messages.success(request, addCourse[1])
+			return redirect(reverse('courses:courses_index'))
+	return redirect(reverse('courses:courses_index'))
 
-	return redirect('/')
-
-# Need to add id variable to destroy
 def destroy(request, id):
-	courseSelect = Course.objects.filter(id = id)
-	# descriptionSelect = Description.objects.filter(id = id)
+	userID = id
+	courseSelect = Course.courseManager.getACourse(userID)
 	courses = {
 		'allCourses': courseSelect,
 	}
@@ -46,8 +37,13 @@ def destroy(request, id):
 def delete(request, id):
 	if request.method == 'POST':
 		if 'yes' in request.POST:
-			courseDelete = Course.objects.filter(id = id).delete()
-			# descriptionDelete = Description.objects.filter(id= id).delete()
-			return redirect('/')
+			userID = id
+			courseDelete = Course.courseManager.delete(userID)
+			if courseDelete[0] == True:
+				messages.success(request, courseDelete[1])
+				return redirect(reverse('courses:courses_index'))
+			else:
+				messages.error(request, courseDelete[1])
+				return redirect(reverse('courses:courses_index'))
 		elif 'no' in request.POST:
-			return redirect('/')
+			return redirect(reverse('courses:courses_index'))
